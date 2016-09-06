@@ -1,2 +1,2 @@
 # CaptureDesktop
-do some exercise
+do some exercises
