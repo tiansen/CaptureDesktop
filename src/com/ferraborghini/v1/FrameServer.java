@@ -13,11 +13,22 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Scanner;
 
+import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -29,20 +40,23 @@ public class FrameServer extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	private int HEIGHT = 0;
-	private int WIDTH = 0;	
+	private int WIDTH = 0;
 	private JTextPane welcome = null;
+	private String IP = "";
+	private Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+
 	public FrameServer() {
 		this.setTitle("Server");
-		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		HEIGHT = (int) dimension.getHeight()/2;
-		WIDTH = (int) dimension.getWidth()/2;
+		
+		HEIGHT = (int) dimension.getHeight() / 4;
+		WIDTH = (int) dimension.getWidth() / 4;
 		this.setSize(WIDTH, HEIGHT);
-		this.setLocation((int) dimension.getWidth()/4, (int) dimension.getHeight()/4);
-		this.setJMenuBar(this.getMenu());
+		this.setLocation((int) dimension.getWidth() / 4,
+				(int) dimension.getHeight() / 4);
 		this.addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e){  
-                System.exit(0);  
-            }  
+			public void windowClosed(WindowEvent e) {
+				System.exit(0);
+			}
 		});
 		welcome = new JTextPane();
 		Container contentPane = this.getContentPane();
@@ -52,49 +66,67 @@ public class FrameServer extends JFrame {
 		contentPane.add(welcome);
 		contentPane.setSize(this.getWidth(), this.getHeight());
 		welcome.setEditable(false);
-        welcome.setText("\n\n    welcome\n by ferraborghini");
-//        this.add(welcome);
-        
+		welcome.setText("\n\n    welcome\n by ferraborghini");
+
+	}
+
+	public void parseString(InputStream is) {
+		int length = 0;
+		byte[] byteArray = new byte[1024];
+		try {
+			while ((length = is.read(byteArray, 0, byteArray.length)) > 0) {
+				System.out.println(new String(byteArray).trim());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void showConnect(){
+		JOptionPane.showConfirmDialog(this, "是否允许"+IP+"的接入？","提示",JOptionPane.YES_NO_OPTION);
+		JDialog jDialog = new JDialog();
+		jDialog.setLocation((int) dimension.getWidth() / 4,
+				(int) dimension.getHeight() / 4);
+		JLabel showIP = new JLabel(IP + "已接入" );
+		jDialog.getContentPane().add(showIP);
+		jDialog.setVisible(true);
+		jDialog.pack();
 	}
 	
-	
-	public JMenuBar getMenu() {
-		JMenuBar menu = new JMenuBar();
-		JMenu function = new JMenu("功能");
-		JMenuItem capture = new JMenuItem("捕获屏幕");
-		function.add(capture);
-		menu.add(function);
-		JMenu help = new JMenu("帮助");
-		JMenuItem aboutMe = new JMenuItem("关于我");
-		help.add(aboutMe);
-		menu.add(help);
-		
-		aboutMe.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				welcome.setText("hello world");
-				welcome.validate();
+	public void startTCPServer() {
+		try {
+			int length = 0;
+			ServerSocket server = new ServerSocket(9999);
+			Socket socket = null;
+			OutputStream os = null;
+			while (true) {
+				socket = server.accept();
+				InputStream is = socket.getInputStream();
+				IP = socket.getInetAddress().getHostAddress();
+				System.out.println(IP + "已接入" );
+				showConnect();
+				byte[] byteArray = new byte[1024];
+				while ((length = is.read(byteArray, 0, byteArray.length)) > 0) {
+					// 因为数组中有空的数据所以需要trim做处理
+					if ("text".equals(new String(byteArray).trim().toString())) {
+						System.out.println("文本数据");
+						os = socket.getOutputStream();
+						os.write(new String("OK").getBytes());
+						parseString(is);
+					}
+				}
 			}
-		});
-		
-		
-		capture.addActionListener(new ActionListener(){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				System.out.println("打开新窗口");
-				Capture captureDesktop = new Capture();
-				captureDesktop.setVisible(true);
-			}
-		});
-		return menu; 
+		} catch (IOException e) {
+			System.out.println("Server failed");
+			e.printStackTrace();
+		}
 	}
-	
-	
+
 	public static void main(String[] args) {
 		FrameServer server = new FrameServer();
 		server.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		server.setVisible(true);
+		server.startTCPServer();
 	}
-	
+
 }
