@@ -128,21 +128,20 @@ public class FrameClient extends JFrame {
 					if (is== null) {
 						System.out.println("null");
 					}
-					FileInputStream fis = new FileInputStream("screenshot.jpg");
+					FileInputStream fis = new FileputStream("screenshot.jpg");
 					byte[] data = new byte[1024];
 //					fos = new FileOutputStream(new File("./cc.jpg"));
 //	                inputByte = new byte[1024];
 	                System.out.println("开始接收数据...");
 	                while ((length = is.read(data, 0, data.length)) > 0) {
 	                    System.out.println(length);
-	                    fis.read(data, 0, length);
-	                    
+	                    fis.write(data, 0, length);
+	                    fis.flush();
 	                }
 	                
 	                System.out.println("完成接收");
 //					byte[] datas = new byte[is.read()];
-//					is.read(datas);
-//					ByteArrayInputStream bin = new ByteArrayInputStream(datas);  
+//					is.read(datas); new ByteArrayInputStream(datas);  
 //			        BufferedImage image = ImageIO.read(bin);
 //			        showScreenShot(image);
 				} catch (IOException e1) {
