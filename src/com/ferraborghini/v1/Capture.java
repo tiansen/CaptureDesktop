@@ -37,10 +37,14 @@ public class Capture extends JFrame {
 		try {
 			BufferedImage screenshot = (new Robot()).createScreenCapture(new Rectangle(0,  
 			        0,(int)dimension.getWidth(),(int)dimension.getHeight()));
-			OutputStream os = null;
-            ImageIO.write(screenshot, "jpg", os);
-		} catch (AWTException | IOException e) {
-			System.out.println("AWT error");
+            getContentPane().setLayout(new BorderLayout(1, 1));
+            JLabel bgLb = new JLabel(new ImageIcon(screenshot));
+            getContentPane().add(bgLb, BorderLayout.CENTER);
+            pack();
+//            ImageIcon imageIcon = new ImageIcon("screen.jpg");
+//            imageIcon.setImage(screenshot);
+//            bgLb.setIcon(imageIcon);
+		} catch (AWTException e) {
 			e.printStackTrace();
 		}  
 	}
