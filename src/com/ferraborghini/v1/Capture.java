@@ -1,6 +1,7 @@
 package com.ferraborghini.v1;
 
 import java.awt.AWTException;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -13,7 +14,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 
 public class Capture extends JFrame {
 	Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();

@@ -13,6 +13,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,7 +25,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -68,7 +76,18 @@ public class FrameClient extends JFrame {
 //        this.add(welcome);
         
 	}
-	
+	public void showScreenShot(BufferedImage screenshot){
+		if (screenshot == null) {
+			System.out.println("获取失败");
+		}
+		if (screenshot != null) {
+			getContentPane().setLayout(new BorderLayout(1, 1));
+	        JLabel bgLb = new JLabel(new ImageIcon(screenshot));
+	        getContentPane().add(bgLb, BorderLayout.CENTER);
+	        pack();
+		}
+		
+	}
 	
 	public JMenuBar getMenu() {
 		JMenuBar menu = new JMenuBar();
@@ -91,12 +110,53 @@ public class FrameClient extends JFrame {
 		});
 		
 		
+		
 		capture.addActionListener(new ActionListener(){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Capture captureDesktop = new Capture();
-				captureDesktop.getBackgroudImage();
-				captureDesktop.setVisible(true);
+				OutputStream os = null;
+				Socket socket = null;
+				InputStream is = null;
+				int length = 0;
+				try {
+					socket = new Socket("127.0.0.1", 9999);
+					os = socket.getOutputStream();
+//					String string = "hello world";
+//					String type = "text";
+//					os.write(type.getBytes());
+					is = socket.getInputStream();
+					if (is== null) {
+						System.out.println("null");
+					}
+					FileInputStream fis = new FileInputStream("screenshot.jpg");
+					byte[] data = new byte[1024];
+//					fos = new FileOutputStream(new File("./cc.jpg"));
+//	                inputByte = new byte[1024];
+	                System.out.println("开始接收数据...");
+	                while ((length = is.read(data, 0, data.length)) > 0) {
+	                    System.out.println(length);
+	                    fis.read(data, 0, length);
+	                    
+	                }
+	                
+	                System.out.println("完成接收");
+//					byte[] datas = new byte[is.read()];
+//					is.read(datas);
+//					ByteArrayInputStream bin = new ByteArrayInputStream(datas);  
+//			        BufferedImage image = ImageIO.read(bin);
+//			        showScreenShot(image);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} finally {
+					try {
+						os.close();
+						is.close();
+					} catch (IOException e2) {
+						e2.printStackTrace();
+					}
+
+				}
+				
 			}
 		});
 		return menu; 
