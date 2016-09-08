@@ -16,12 +16,14 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
@@ -36,6 +38,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
+import com.sun.xml.internal.ws.util.ByteArrayBuffer;
+
 public class FrameClient extends JFrame {
 
 	/**
@@ -45,7 +49,7 @@ public class FrameClient extends JFrame {
 	private int HEIGHT = 0;
 	private int WIDTH = 0;	
 	private JTextPane welcome = null;
-	
+	private Dimension dimension = null;
 	
 	
 	
@@ -53,7 +57,7 @@ public class FrameClient extends JFrame {
 	
 	public FrameClient() {
 		this.setTitle("Server");
-		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+		dimension = Toolkit.getDefaultToolkit().getScreenSize();
 		HEIGHT = (int) dimension.getHeight()/2;
 		WIDTH = (int) dimension.getWidth()/2;
 		this.setSize(WIDTH, HEIGHT);
@@ -76,12 +80,39 @@ public class FrameClient extends JFrame {
 //        this.add(welcome);
         
 	}
+	
+	
+	public class ShowScreenShot extends Thread{
+		private BufferedImage screenshot = null;
+		
+		public ShowScreenShot(BufferedImage screenshot) {
+			screenshot = this.screenshot;
+		}
+		
+		public void run() {
+			super.run();
+			showScreenShot();
+		}
+		public void showScreenShot(){
+			System.out.println("show");
+			if (screenshot != null) {
+				getContentPane().setLayout(new BorderLayout(1, 1));
+				FrameClient.this.setLocation(0,0);
+		        JLabel bgLb = new JLabel(new ImageIcon(screenshot));
+		        getContentPane().add(bgLb, BorderLayout.CENTER);
+		        pack();
+			}
+			
+		}
+	}
+	
 	public void showScreenShot(BufferedImage screenshot){
 		if (screenshot == null) {
 			System.out.println("获取失败");
 		}
 		if (screenshot != null) {
 			getContentPane().setLayout(new BorderLayout(1, 1));
+			this.setLocation(0,0);
 	        JLabel bgLb = new JLabel(new ImageIcon(screenshot));
 	        getContentPane().add(bgLb, BorderLayout.CENTER);
 	        pack();
@@ -102,7 +133,7 @@ public class FrameClient extends JFrame {
 		
 		aboutMe.addActionListener(new ActionListener() {
 			
-			@Override
+			
 			public void actionPerformed(ActionEvent e) {
 				welcome.setText("hello world");
 				welcome.validate();
@@ -112,47 +143,73 @@ public class FrameClient extends JFrame {
 		
 		
 		capture.addActionListener(new ActionListener(){
-			@Override
+			
 			public void actionPerformed(ActionEvent e) {
+//				FileOutputStream fis = null;
+//				String string = "hello world";
+//				String type = "text";
+//				os.write(type.getBytes());
 				OutputStream os = null;
 				Socket socket = null;
 				InputStream is = null;
+				ByteArrayOutputStream baos = null;      //使用baos缓冲所有socket的数据
+				ByteArrayInputStream bais = null;		//再讲baos转换成bios写入BufferedImage中
 				int length = 0;
 				try {
 					socket = new Socket("127.0.0.1", 9999);
+					socket.setSoTimeout(2000);
 					os = socket.getOutputStream();
-//					String string = "hello world";
-//					String type = "text";
-//					os.write(type.getBytes());
+//					
 					is = socket.getInputStream();
 					if (is== null) {
 						System.out.println("null");
 					}
-					FileInputStream fis = new FileputStream("screenshot.jpg");
-					byte[] data = new byte[1024];
+//					fis = new FileOutputStream("screenshot.jpg");
 //					fos = new FileOutputStream(new File("./cc.jpg"));
 //	                inputByte = new byte[1024];
+					byte[] data = new byte[1024];
+					
 	                System.out.println("开始接收数据...");
-	                while ((length = is.read(data, 0, data.length)) > 0) {
-	                    System.out.println(length);
-	                    fis.write(data, 0, length);
-	                    fis.flush();
-	                }
+	                int len_image = 0;
+	                while (true) {
+	                	baos = new ByteArrayOutputStream();
+	                	try {
+		                	while ((length = is.read(data, 0, data.length)) > 0) {
+			                	len_image+=length;
+			                    System.out.println(length);
+			                    baos.write(data);
+			                    baos.flush();
+//			                    fis.write(data, 0, length);
+//			                    fis.flush();
+//			                    if (length < 1000) {
+//									break;
+//								}
+			                }
+						} catch (SocketTimeoutException e2) {
+							
+						}
+		                
+		                System.out.println("完成接收: "+len_image);
+//						byte[] datas = new byte[is.read()];
+//						is.read(datas); 
+//		                BufferedImage image = ImageIO.read(new File("screenshot.jpg"));
+		                bais = new ByteArrayInputStream(baos.toByteArray());  
+				        BufferedImage image = ImageIO.read(bais);
+				        showScreenShot(image);
+//				        new ShowScreenShot(image).start();
+					}
 	                
-	                System.out.println("完成接收");
-//					byte[] datas = new byte[is.read()];
-//					is.read(datas); new ByteArrayInputStream(datas);  
-//			        BufferedImage image = ImageIO.read(bin);
-//			        showScreenShot(image);
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} finally {
-					try {
-						os.close();
-						is.close();
-					} catch (IOException e2) {
-						e2.printStackTrace();
-					}
+//					try {
+//						os.close();
+//						is.close();
+////		                fis.flush();
+////		                fis.close();
+//					} catch (IOException e2) {
+//						e2.printStackTrace();
+//					}
 
 				}
 				
