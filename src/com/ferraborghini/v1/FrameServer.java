@@ -25,7 +25,9 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Date;
 import java.util.Scanner;
+import java.util.Timer;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -123,10 +125,20 @@ public class FrameServer extends JFrame {
 //				}
 				os = socket.getOutputStream();
 //				os.write(new String("OK").getBytes());
-				sendImage(os);
+				Date date = new Date();
+				
+				
+				while (true) {
+					sendImage(os);
+					Thread.sleep(3000);
+				}
+				
 			}
 		} catch (IOException e) {
 			System.out.println("Server failed");
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -135,15 +147,12 @@ public class FrameServer extends JFrame {
 	 */
 	public void sendImage(OutputStream os){
 		BufferedImage image = getScreenShot();
-//		byte[] sendBytes = null;
-//		int length = 0;
 		ByteArrayOutputStream baos  = new ByteArrayOutputStream();
 		try {
 			ImageIO.write(image, "jpg", baos);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-//		ByteArrayOutputStream ByteArray = os;
 		byte[] datas = baos.toByteArray();
 		System.out.println(datas.length);
         try {
