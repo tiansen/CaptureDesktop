@@ -1,0 +1,62 @@
+FrameServer
+//		JDialog jDialog = new JDialog();
+//		jDialog.setLocation((int) dimension.getWidth() / 4,
+//				(int) dimension.getHeight() / 4);
+//		JLabel showIP = new JLabel(IP + "已接入" );
+//		jDialog.getContentPane().add(showIP);
+//		jDialog.setVisible(true);
+//		jDialog.pack();
+
+
+//				InputStream is = socket.getInputStream();
+//				byte[] byteArray = new byte[1024];
+//				while ((length = is.read(byteArray, 0, byteArray.length)) > 0) {
+//					// 因为数组中有空的数据所以需要trim做处理
+//					if ("text".equals(new String(byteArray).trim().toString())) {
+////						System.out.println("文本数据");
+//						
+////						parseString(is);
+//					}
+//				}
+
+
+FrameClient
+
+//				FileOutputStream fis = null;
+//				String string = "hello world";
+//				String type = "text";
+//				os.write(type.getBytes());
+
+
+//					socket.setSoTimeout(2000);
+
+//					fis = new FileOutputStream("screenshot.jpg");
+//					fos = new FileOutputStream(new File("./cc.jpg"));
+//	                inputByte = new byte[1024];
+
+
+
+//			                    fis.write(data, 0, length);
+//			                    fis.flush();
+//			                    if (length < 1000) {
+//									System.out.println(new String(data));
+//								}
+
+
+//						byte[] datas = new byte[is.read()];
+//						is.read(datas); 
+//		                BufferedImage image = ImageIO.read(new File("screenshot.jpg"));
+
+
+
+//				        new ShowScreenShot(image).start();
+
+
+//					try {
+//						os.close();
+//						is.close();
+////		                fis.flush();
+////		                fis.close();
+//					} catch (IOException e2) {
+//						e2.printStackTrace();
+//					}
