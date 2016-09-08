@@ -1,4 +1,9 @@
 package com.ferraborghini.v1;
+/**
+ * 客户端也就是可以进行远程控制的一端
+ * 
+ * 
+ */
 
 import java.awt.BorderLayout;
 import java.awt.ComponentOrientation;
@@ -47,26 +52,23 @@ public class FrameClient extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	private int HEIGHT = 0;
-	private int WIDTH = 0;	
+	private int WIDTH = 0;
 	private JTextPane welcome = null;
 	private Dimension dimension = null;
-	
-	
-	
-	
-	
+
 	public FrameClient() {
 		this.setTitle("Server");
 		dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		HEIGHT = (int) dimension.getHeight()/2;
-		WIDTH = (int) dimension.getWidth()/2;
+		HEIGHT = (int) dimension.getHeight() / 2;
+		WIDTH = (int) dimension.getWidth() / 2;
 		this.setSize(WIDTH, HEIGHT);
-		this.setLocation((int) dimension.getWidth()/4, (int) dimension.getHeight()/4);
+		this.setLocation((int) dimension.getWidth() / 4,
+				(int) dimension.getHeight() / 4);
 		this.setJMenuBar(this.getMenu());
 		this.addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e){  
-                System.exit(0);  
-            }  
+			public void windowClosed(WindowEvent e) {
+				System.exit(0);
+			}
 		});
 		welcome = new JTextPane();
 		Container contentPane = this.getContentPane();
@@ -76,50 +78,52 @@ public class FrameClient extends JFrame {
 		contentPane.add(welcome);
 		contentPane.setSize(this.getWidth(), this.getHeight());
 		welcome.setEditable(false);
-        welcome.setText("\n\n    welcome\n by ferraborghini");
-//        this.add(welcome);
-        
+		welcome.setText("\n\n    welcome\n by ferraborghini");
 	}
-	
-	
-	public class ShowScreenShot extends Thread{
+	/**
+	 * 使用多线程来处理显示图片
+	 * @author t81019503
+	 *
+	 */
+	public class ShowScreenShot extends Thread {
 		private BufferedImage screenshot = null;
-		
+
 		public ShowScreenShot(BufferedImage screenshot) {
 			screenshot = this.screenshot;
 		}
-		
+
 		public void run() {
 			super.run();
 			showScreenShot();
 		}
-		public void showScreenShot(){
+
+		public void showScreenShot() {
 			System.out.println("show");
 			if (screenshot != null) {
 				getContentPane().setLayout(new BorderLayout(1, 1));
-				FrameClient.this.setLocation(0,0);
-		        JLabel bgLb = new JLabel(new ImageIcon(screenshot));
-		        getContentPane().add(bgLb, BorderLayout.CENTER);
-		        pack();
+				FrameClient.this.setLocation(0, 0);
+				JLabel bgLb = new JLabel(new ImageIcon(screenshot));
+				getContentPane().add(bgLb, BorderLayout.CENTER);
+				pack();
 			}
-			
+
 		}
 	}
-	
-	public void showScreenShot(BufferedImage screenshot){
+
+	public void showScreenShot(BufferedImage screenshot) {
 		if (screenshot == null) {
 			System.out.println("获取失败");
 		}
 		if (screenshot != null) {
 			getContentPane().setLayout(new BorderLayout(1, 1));
-			this.setLocation(0,0);
-	        JLabel bgLb = new JLabel(new ImageIcon(screenshot));
-	        getContentPane().add(bgLb, BorderLayout.CENTER);
-	        pack();
+			this.setLocation(0, 0);
+			JLabel bgLb = new JLabel(new ImageIcon(screenshot));
+			getContentPane().add(bgLb, BorderLayout.CENTER);
+			pack();
 		}
-		
+
 	}
-	
+
 	public JMenuBar getMenu() {
 		JMenuBar menu = new JMenuBar();
 		JMenu function = new JMenu("功能");
@@ -130,101 +134,74 @@ public class FrameClient extends JFrame {
 		JMenuItem aboutMe = new JMenuItem("关于我");
 		help.add(aboutMe);
 		menu.add(help);
-		
+
 		aboutMe.addActionListener(new ActionListener() {
-			
-			
+
 			public void actionPerformed(ActionEvent e) {
 				welcome.setText("hello world");
 				welcome.validate();
 			}
 		});
-		
-		
-		
-		capture.addActionListener(new ActionListener(){
-			
+
+		capture.addActionListener(new ActionListener() {
+
 			public void actionPerformed(ActionEvent e) {
-//				FileOutputStream fis = null;
-//				String string = "hello world";
-//				String type = "text";
-//				os.write(type.getBytes());
 				OutputStream os = null;
 				Socket socket = null;
 				InputStream is = null;
-				ByteArrayOutputStream baos = null;      //使用baos缓冲所有socket的数据
-				ByteArrayInputStream bais = null;		//再讲baos转换成bios写入BufferedImage中
+				ByteArrayOutputStream baos = null; // 	使用baos缓冲所有socket的数据
+				ByteArrayInputStream bais = null; // 	再讲baos转换成bios写入BufferedImage中
 				int length = 0;
 				try {
 					socket = new Socket("127.0.0.1", 9999);
-					socket.setSoTimeout(2000);
 					os = socket.getOutputStream();
-//					
 					is = socket.getInputStream();
-					if (is== null) {
-						System.out.println("null");
-					}
-//					fis = new FileOutputStream("screenshot.jpg");
-//					fos = new FileOutputStream(new File("./cc.jpg"));
-//	                inputByte = new byte[1024];
 					byte[] data = new byte[1024];
-					
-	                System.out.println("开始接收数据...");
-	                int len_image = 0;
-	                while (true) {
-	                	baos = new ByteArrayOutputStream();
-	                	try {
-		                	while ((length = is.read(data, 0, data.length)) > 0) {
-			                	len_image+=length;
-			                    System.out.println(length);
-			                    baos.write(data);
-			                    baos.flush();
-//			                    fis.write(data, 0, length);
-//			                    fis.flush();
-//			                    if (length < 1000) {
-//									break;
-//								}
-			                }
+					System.out.println("开始接收数据...");
+					while (true) {
+						int len_image = 0;
+						int data_length = 0;
+						baos = new ByteArrayOutputStream();
+						boolean first_data = true;
+						try {
+							while ((length = is.read(data, 0, data.length)) > 0) {
+								System.out.println("读入数据");
+								if (first_data) {
+									data_length = Utils.byteArrayToInt(data);
+									first_data = false;
+								} else {
+									len_image += length;
+									baos.write(data);
+									baos.flush();
+									if (Math.abs((len_image - data_length)) < 100) {
+										first_data = true;
+										break;
+									}
+								}
+							}
 						} catch (SocketTimeoutException e2) {
-							
+
 						}
-		                
-		                System.out.println("完成接收: "+len_image);
-//						byte[] datas = new byte[is.read()];
-//						is.read(datas); 
-//		                BufferedImage image = ImageIO.read(new File("screenshot.jpg"));
-		                bais = new ByteArrayInputStream(baos.toByteArray());  
-				        BufferedImage image = ImageIO.read(bais);
-				        showScreenShot(image);
-//				        new ShowScreenShot(image).start();
+
+						System.out.println("完成接收: " + len_image);
+						bais = new ByteArrayInputStream(baos.toByteArray());      //socket获取的数据先用baos，再将其转换为bais，使用ImageIO写入BufferedImage
+						BufferedImage image = ImageIO.read(bais);
+						showScreenShot(image);
+						// new ShowScreenShot(image).start();
 					}
-	                
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				} finally {
-//					try {
-//						os.close();
-//						is.close();
-////		                fis.flush();
-////		                fis.close();
-//					} catch (IOException e2) {
-//						e2.printStackTrace();
-//					}
-
 				}
-				
 			}
 		});
-		return menu; 
+		return menu;
 	}
-	
 
-	
 	public static void main(String[] args) {
 		FrameClient client = new FrameClient();
 		client.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
 		client.setVisible(true);
 	}
-	
+
 }
