@@ -1,5 +1,7 @@
 package com.ferraborghini.v1;
-
+/**
+ * 服务端，进行图片截取的一端
+ */
 import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.ComponentOrientation;
@@ -24,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
@@ -56,7 +59,6 @@ public class FrameServer extends JFrame {
 
 	public FrameServer() {
 		this.setTitle("Server");
-		
 		HEIGHT = (int) dimension.getHeight() / 4;
 		WIDTH = (int) dimension.getWidth() / 4;
 		this.setSize(WIDTH, HEIGHT);
@@ -91,17 +93,12 @@ public class FrameServer extends JFrame {
 		}
 	}
 
-	public void showConnect(){
-		JOptionPane.showConfirmDialog(this, "是否允许"+IP+"的接入？","提示",JOptionPane.YES_NO_OPTION);
-//		JDialog jDialog = new JDialog();
-//		jDialog.setLocation((int) dimension.getWidth() / 4,
-//				(int) dimension.getHeight() / 4);
-//		JLabel showIP = new JLabel(IP + "已接入" );
-//		jDialog.getContentPane().add(showIP);
-//		jDialog.setVisible(true);
-//		jDialog.pack();
+	public void showConnect() {
+		JOptionPane.showConfirmDialog(this, "是否允许" + IP + "的接入？", "提示",
+				JOptionPane.YES_NO_OPTION);
+
 	}
-	
+
 	public void startTCPServer() {
 		try {
 			int length = 0;
@@ -110,76 +107,67 @@ public class FrameServer extends JFrame {
 			OutputStream os = null;
 			while (true) {
 				socket = server.accept();
-//				InputStream is = socket.getInputStream();
 				IP = socket.getInetAddress().getHostAddress();
-				System.out.println(IP + "已接入" );
+				System.out.println(IP + "已接入");
 				showConnect();
-//				byte[] byteArray = new byte[1024];
-//				while ((length = is.read(byteArray, 0, byteArray.length)) > 0) {
-//					// 因为数组中有空的数据所以需要trim做处理
-//					if ("text".equals(new String(byteArray).trim().toString())) {
-////						System.out.println("文本数据");
-//						
-////						parseString(is);
-//					}
-//				}
+
 				os = socket.getOutputStream();
-//				os.write(new String("OK").getBytes());
-				Date date = new Date();
-				
-				
+				// 循环发送截图
 				while (true) {
-					sendImage(os);
-					Thread.sleep(3000);
+					try {
+						sendImage(os);
+						Thread.sleep(3000);
+					} catch (SocketException e) {
+						break;
+					}
 				}
-				
+
 			}
 		} catch (IOException e) {
 			System.out.println("Server failed");
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+
 	/**
 	 * 传输获取到的图像信息
 	 */
-	public void sendImage(OutputStream os){
+	public void sendImage(OutputStream os) throws SocketException {
 		BufferedImage image = getScreenShot();
-		ByteArrayOutputStream baos  = new ByteArrayOutputStream();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			ImageIO.write(image, "jpg", baos);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		byte[] datas = baos.toByteArray();
-		System.out.println(datas.length);
-        try {
-			os.write(datas);
+			baos = new ByteArrayOutputStream();
+			byte[] datas = baos.toByteArray();
+			baos.write(Utils.intToBytes(datas.length)); // 将数据长度写入头2014个字节
+			baos.write(datas);
+			System.out.println(baos.toByteArray().length);
+			os.write(baos.toByteArray());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * 获取屏幕截图
+	 * 
 	 * @param args
 	 */
-	public BufferedImage getScreenShot(){
+	public BufferedImage getScreenShot() {
 		BufferedImage screenshot = null;
 		try {
-			screenshot = (new Robot()).createScreenCapture(new Rectangle(0,  
-			        0,(int)dimension.getWidth(),(int)dimension.getHeight()));
+			screenshot = (new Robot()).createScreenCapture(new Rectangle(0, 0,
+					(int) dimension.getWidth(), (int) dimension.getHeight()));
 			return screenshot;
 		} catch (AWTException e) {
 			e.printStackTrace();
 			return screenshot;
 		}
-		
+
 	}
-	
-	
+
 	public static void main(String[] args) {
 		FrameServer server = new FrameServer();
 		server.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
