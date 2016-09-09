@@ -114,15 +114,16 @@ public class FrameClient extends JFrame {
 	public void showScreenShot(BufferedImage screenshot) {
 		if (screenshot == null) {
 			System.out.println("获取图片数据为空");
-		}
-		if (screenshot != null) {
-			getContentPane().setLayout(new BorderLayout(1, 1));
-			this.setLocation(0, 0);
+		}else{
+			if (jf == null) {
+				jf = new FullScreenFrame();
+				jf.addKeyListener((KeyListener) jf);
+			}
 			JLabel bgLb = new JLabel(new ImageIcon(screenshot));
-			getContentPane().add(bgLb, BorderLayout.CENTER);
-			pack();
+			jf.getContentPane().add(bgLb, BorderLayout.CENTER);
+			jf.pack();
+			
 		}
-
 	}
 
 	public JMenuBar getMenu() {
