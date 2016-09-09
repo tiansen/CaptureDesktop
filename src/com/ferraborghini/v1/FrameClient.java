@@ -26,7 +26,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -43,7 +45,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 
 public class FrameClient extends JFrame {
 
@@ -112,7 +113,7 @@ public class FrameClient extends JFrame {
 
 	public void showScreenShot(BufferedImage screenshot) {
 		if (screenshot == null) {
-			System.out.println("获取失败");
+			System.out.println("获取图片数据为空");
 		}
 		if (screenshot != null) {
 			getContentPane().setLayout(new BorderLayout(1, 1));
@@ -146,56 +147,104 @@ public class FrameClient extends JFrame {
 		capture.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				OutputStream os = null;
-				Socket socket = null;
-				InputStream is = null;
-				ByteArrayOutputStream baos = null; // 	使用baos缓冲所有socket的数据
-				ByteArrayInputStream bais = null; // 	再讲baos转换成bios写入BufferedImage中
-				int length = 0;
-				try {
-					socket = new Socket("127.0.0.1", 9999);
-					os = socket.getOutputStream();
-					is = socket.getInputStream();
-					byte[] data = new byte[1024];
-					System.out.println("开始接收数据...");
-					while (true) {
-						int len_image = 0;
-						int data_length = 0;
-						baos = new ByteArrayOutputStream();
-						boolean first_data = true;
-						try {
-							while ((length = is.read(data, 0, data.length)) > 0) {
-								System.out.println("读入数据");
-								if (first_data) {
-									data_length = Utils.byteArrayToInt(data);
-									first_data = false;
-								} else {
-									len_image += length;
-									baos.write(data);
-									baos.flush();
-									if (Math.abs((len_image - data_length)) < 100) {
-										first_data = true;
-										break;
-									}
-								}
-							}
-						} catch (SocketTimeoutException e2) {
-
-						}
-
-						System.out.println("完成接收: " + len_image);
-						bais = new ByteArrayInputStream(baos.toByteArray());      //socket获取的数据先用baos，再将其转换为bais，使用ImageIO写入BufferedImage
-						BufferedImage image = ImageIO.read(bais);
-						showScreenShot(image);
-						// new ShowScreenShot(image).start();
-					}
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				} finally {
-				}
+				startSerializableSocket();
 			}
 		});
 		return menu;
+	}
+	/**
+	 * 传统的传输方式，直接用byte数组获取
+	 */
+	public void startSocket(){
+		OutputStream os = null;
+		Socket socket = null;
+		InputStream is = null;
+		ByteArrayOutputStream baos = null; // 	使用baos缓冲所有socket的数据
+		ByteArrayInputStream bais = null; // 	再讲baos转换成bios写入BufferedImage中
+		int length = 0;
+		try {
+			socket = new Socket("127.0.0.1", 9999);
+			os = socket.getOutputStream();
+			is = socket.getInputStream();
+			byte[] data = new byte[1024];
+			System.out.println("开始接收数据...");
+			while (true) {
+				int len_image = 0;
+				int data_length = 0;
+				baos = new ByteArrayOutputStream();
+				boolean first_data = true;
+				try {
+					while ((length = is.read(data, 0, data.length)) > 0) {
+						System.out.println("读入数据");
+						if (first_data) {
+							data_length = Utils.byteArrayToInt(data);
+							first_data = false;
+						} else {
+							len_image += length;
+							baos.write(data);
+							baos.flush();
+							if (Math.abs((len_image - data_length)) < 100) {
+								first_data = true;
+								break;
+							}
+						}
+					}
+				} catch (SocketTimeoutException e2) {
+
+				}
+
+				System.out.println("完成接收: " + len_image);
+				bais = new ByteArrayInputStream(baos.toByteArray());      //socket获取的数据先用baos，再将其转换为bais，使用ImageIO写入BufferedImage
+				BufferedImage image = ImageIO.read(bais);
+				showScreenShot(image);
+				// new ShowScreenShot(image).start();
+			}
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} finally {
+		}
+	}
+	
+	
+	/**
+	 * 使用序列化的传输方式，精简步骤，增强代码的重用能力
+	 */
+	public void startSerializableSocket(){
+		DataBean db = new DataBean();
+		OutputStream os = null;
+		Socket socket = null;
+		InputStream is = null;
+		ObjectInputStream ois = null;
+		BufferedImage image = null;
+		try {
+			socket = new Socket("127.0.0.1", 9999);
+			os = socket.getOutputStream();
+			is = socket.getInputStream();
+			System.out.println("开始接收数据...");
+			while (true) {
+				ois = new ObjectInputStream(is);
+				db = (DataBean)ois.readObject();
+				if (DataBean.MESSAGE.equals(db.getDataType())) {
+					System.out.println(db.getData());
+				}else if (DataBean.IMAGE.equals(db.getDataType())) {
+					System.out.println(((byte[]) db.getData()).length);
+					image = Utils.ByteToBufferedImage((byte[]) db.getData());
+				}else if (DataBean.POSITION.equals(db.getDataType())) {
+					
+				}
+				System.out.println("完成接收: ");
+				if (image!=null) {
+					showScreenShot(image);
+				}else{
+					
+				}
+				
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} 
 	}
 
 	public static void main(String[] args) {
