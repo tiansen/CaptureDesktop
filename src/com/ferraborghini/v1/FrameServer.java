@@ -23,7 +23,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -101,7 +103,6 @@ public class FrameServer extends JFrame {
 
 	public void startTCPServer() {
 		try {
-			int length = 0;
 			ServerSocket server = new ServerSocket(9999);
 			Socket socket = null;
 			OutputStream os = null;
@@ -110,25 +111,22 @@ public class FrameServer extends JFrame {
 				IP = socket.getInetAddress().getHostAddress();
 				System.out.println(IP + "已接入");
 				showConnect();
-
 				os = socket.getOutputStream();
 				// 循环发送截图
 				while (true) {
 					try {
-						sendImage(os);
-						Thread.sleep(3000);
-					} catch (SocketException e) {
+						sendSerializableImage(os);
+						Thread.sleep(1000);
+					} catch (Exception e) {
 						break;
 					}
 				}
-
 			}
 		} catch (IOException e) {
 			System.out.println("Server failed");
 			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		} 
+
 	}
 
 	/**
@@ -139,8 +137,8 @@ public class FrameServer extends JFrame {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		try {
 			ImageIO.write(image, "jpg", baos);
-			baos = new ByteArrayOutputStream();
 			byte[] datas = baos.toByteArray();
+			baos = new ByteArrayOutputStream();
 			baos.write(Utils.intToBytes(datas.length)); // 将数据长度写入头2014个字节
 			baos.write(datas);
 			System.out.println(baos.toByteArray().length);
@@ -167,7 +165,49 @@ public class FrameServer extends JFrame {
 		}
 
 	}
+	
+	/**
+	 * 传输Message
+	 * 
+	 * @param args
+	 */
+	public void sendSerializableMessage(OutputStream os){
+		DataBean db  = new DataBean();
+		db.setDataType(DataBean.MESSAGE);
+		db.setData("hello world");
+		try {
+			ObjectOutputStream oos = new ObjectOutputStream(os);
+			oos.writeObject(db);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
+	/**
+	 * 序列化传输图片
+	 * @param args
+	 */
+	public void sendSerializableImage(OutputStream os){
+		ObjectOutputStream oos = null;
+		try {
+			oos = new ObjectOutputStream(os);
+		} catch (IOException e) {
+			System.out.println("ObjectOutputStream 转换失败");
+			e.printStackTrace();
+		}
+		DataBean db  = new DataBean();
+		db.setDataType(DataBean.IMAGE);
+		BufferedImage image = getScreenShot();
+		byte[] imageByte = Utils.BufferedImageToByte(image);
+		db.setData(imageByte);
+		try {
+			oos.writeObject(db);
+		} catch (IOException e) {
+			System.out.println("图片数据序列化传输失败");
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
 		FrameServer server = new FrameServer();
 		server.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
