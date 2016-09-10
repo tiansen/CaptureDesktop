@@ -62,7 +62,7 @@ public class FrameClient extends JFrame {
 	private Dimension dimension = null;
 	FullScreenFrame jf = null;
 	BufferedImage image = null;
-
+	private Thread imageSocketThread;
 	public FrameClient() {
 		this.setTitle("Server");
 		dimension = Toolkit.getDefaultToolkit().getScreenSize();
@@ -90,7 +90,7 @@ public class FrameClient extends JFrame {
 	/**
 	 * 使用多线程来处理显示图片
 	 * 
-	 * @author t81019503
+	 * @author ferraborghini
 	 *
 	 */
 	public class ShowScreenShot extends Thread {
@@ -125,11 +125,19 @@ public class FrameClient extends JFrame {
 		} else {
 			if (jf == null) {
 				jf = new FullScreenFrame();
+				jf.addWindowListener(new WindowAdapter() {
+					@Override
+					public void windowClosing(WindowEvent e) {
+						super.windowClosing(e);
+						imageSocketThread.stop();;
+					}
+				});
 			}
 			JLabel bgLb = new JLabel(new ImageIcon(screenshot));
 			jf.getContentPane().removeAll();
 			jf.getContentPane().add(bgLb, BorderLayout.CENTER);
 			jf.pack();
+			
 
 		}
 	}
@@ -156,15 +164,14 @@ public class FrameClient extends JFrame {
 		capture.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-
-				java.awt.EventQueue.invokeLater(new Runnable() {
-					
-                    @Override
-                    public void run() {
+				//不必要使用EventQueue
+//				java.awt.EventQueue.invokeLater(new Runnable() {
+//					
+//                    @Override
+//                    public void run() {
                     	 startSerializableSocket();
-                    }
-                });
-				
+//                    }
+//                });
 			}
 		});
 		return menu;
@@ -229,7 +236,7 @@ public class FrameClient extends JFrame {
 	 */
 	public void startSerializableSocket() {
 		//不能阻塞UI线程
-		new Thread(new Runnable() {
+		imageSocketThread = new Thread(new Runnable() {
 			public void run() {
 				try {
 					DataBean db = new DataBean();
@@ -277,7 +284,8 @@ public class FrameClient extends JFrame {
 					e.printStackTrace();
 				}
 			}
-		}).start();
+		});
+		imageSocketThread.start();
 	}
 
 	public static void main(String[] args) {
