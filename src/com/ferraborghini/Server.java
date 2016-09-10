@@ -24,8 +24,11 @@ public class Server {
 					.createScreenCapture(new Rectangle(0, 0, (int) dimension.getWidth(), (int) dimension.getHeight()));
 			File file = new File("screen.jpg");
 			ImageIO.write(screenshot, "jpg", file);
-		} catch (AWTException | IOException e) {
+		} catch (AWTException e) {
 			System.out.println("AWT error");
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

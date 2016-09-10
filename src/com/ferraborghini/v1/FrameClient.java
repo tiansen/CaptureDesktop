@@ -14,6 +14,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -35,6 +36,7 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
+import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -44,7 +46,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 
+import com.sun.jdi.event.EventQueue;
 
 public class FrameClient extends JFrame {
 
@@ -56,15 +60,16 @@ public class FrameClient extends JFrame {
 	private int WIDTH = 0;
 	private JTextPane welcome = null;
 	private Dimension dimension = null;
-	JFrame jf = null;
+	FullScreenFrame jf = null;
+	BufferedImage image = null;
+
 	public FrameClient() {
 		this.setTitle("Server");
 		dimension = Toolkit.getDefaultToolkit().getScreenSize();
 		HEIGHT = (int) dimension.getHeight() / 2;
 		WIDTH = (int) dimension.getWidth() / 2;
 		this.setSize(WIDTH, HEIGHT);
-		this.setLocation((int) dimension.getWidth() / 4,
-				(int) dimension.getHeight() / 4);
+		this.setLocation((int) dimension.getWidth() / 4, (int) dimension.getHeight() / 4);
 		this.setJMenuBar(this.getMenu());
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
@@ -81,8 +86,10 @@ public class FrameClient extends JFrame {
 		welcome.setEditable(false);
 		welcome.setText("\n\n    welcome\n by ferraborghini");
 	}
+
 	/**
 	 * 使用多线程来处理显示图片
+	 * 
 	 * @author t81019503
 	 *
 	 */
@@ -106,6 +113,7 @@ public class FrameClient extends JFrame {
 				JLabel bgLb = new JLabel(new ImageIcon(screenshot));
 				getContentPane().add(bgLb, BorderLayout.CENTER);
 				pack();
+				FrameClient.this.repaint();
 			}
 
 		}
@@ -114,15 +122,15 @@ public class FrameClient extends JFrame {
 	public void showScreenShot(BufferedImage screenshot) {
 		if (screenshot == null) {
 			System.out.println("获取图片数据为空");
-		}else{
+		} else {
 			if (jf == null) {
 				jf = new FullScreenFrame();
-				jf.addKeyListener((KeyListener) jf);
 			}
 			JLabel bgLb = new JLabel(new ImageIcon(screenshot));
+			jf.getContentPane().removeAll();
 			jf.getContentPane().add(bgLb, BorderLayout.CENTER);
 			jf.pack();
-			
+
 		}
 	}
 
@@ -148,22 +156,32 @@ public class FrameClient extends JFrame {
 		capture.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				startSerializableSocket();
+
+				java.awt.EventQueue.invokeLater(new Runnable() {
+					
+                    @Override
+                    public void run() {
+                    	 startSerializableSocket();
+                    }
+                });
+				
 			}
 		});
 		return menu;
 	}
+
 	/**
 	 * 传统的传输方式，直接用byte数组获取
 	 */
-	public void startSocket(){
+	public void startSocket() {
 		OutputStream os = null;
 		Socket socket = null;
 		InputStream is = null;
-		ByteArrayOutputStream baos = null; // 	使用baos缓冲所有socket的数据
-		ByteArrayInputStream bais = null; // 	再讲baos转换成bios写入BufferedImage中
+		ByteArrayOutputStream baos = null; // 使用baos缓冲所有socket的数据
+		ByteArrayInputStream bais = null; // 再讲baos转换成bios写入BufferedImage中
 		int length = 0;
 		try {
+			
 			socket = new Socket("127.0.0.1", 9999);
 			os = socket.getOutputStream();
 			is = socket.getInputStream();
@@ -195,7 +213,7 @@ public class FrameClient extends JFrame {
 				}
 
 				System.out.println("完成接收: " + len_image);
-				bais = new ByteArrayInputStream(baos.toByteArray());      //socket获取的数据先用baos，再将其转换为bais，使用ImageIO写入BufferedImage
+				bais = new ByteArrayInputStream(baos.toByteArray()); // socket获取的数据先用baos，再将其转换为bais，使用ImageIO写入BufferedImage
 				BufferedImage image = ImageIO.read(bais);
 				showScreenShot(image);
 				// new ShowScreenShot(image).start();
@@ -205,47 +223,61 @@ public class FrameClient extends JFrame {
 		} finally {
 		}
 	}
-	
-	
+
 	/**
 	 * 使用序列化的传输方式，精简步骤，增强代码的重用能力
 	 */
-	public void startSerializableSocket(){
-		DataBean db = new DataBean();
-		OutputStream os = null;
-		Socket socket = null;
-		InputStream is = null;
-		ObjectInputStream ois = null;
-		BufferedImage image = null;
-		try {
-			socket = new Socket("127.0.0.1", 9999);
-			os = socket.getOutputStream();
-			is = socket.getInputStream();
-			System.out.println("开始接收数据...");
-			while (true) {
-				ois = new ObjectInputStream(is);
-				db = (DataBean)ois.readObject();
-				if (DataBean.MESSAGE.equals(db.getDataType())) {
-					System.out.println(db.getData());
-				}else if (DataBean.IMAGE.equals(db.getDataType())) {
-					System.out.println(((byte[]) db.getData()).length);
-					image = Utils.ByteToBufferedImage((byte[]) db.getData());
-				}else if (DataBean.POSITION.equals(db.getDataType())) {
-					
+	public void startSerializableSocket() {
+		//不能阻塞UI线程
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					DataBean db = new DataBean();
+					OutputStream os = null;
+					Socket socket = null;
+					InputStream is = null;
+					ObjectInputStream ois = null;
+					socket = new Socket("127.0.0.1", 9999);
+					os = socket.getOutputStream();
+					is = socket.getInputStream();
+					System.out.println("开始接收数据...");
+					while (true) {
+						ois = new ObjectInputStream(is);
+						db = (DataBean) ois.readObject();
+						if (DataBean.MESSAGE.equals(db.getDataType())) {
+							System.out.println(db.getData());
+						} else if (DataBean.IMAGE.equals(db.getDataType())) {
+							System.out.println(((byte[]) db.getData()).length);
+							image = Utils.ByteToBufferedImage((byte[]) db.getData());
+						} else if (DataBean.POSITION.equals(db.getDataType())) {
+
+						}
+						System.out.println("完成接收");
+						
+						if (image != null) {
+//							SwingUtilities.invokeLater(new Runnable() {       
+//							       public void run() {
+							    	   showScreenShot(image);
+//							       }
+//							      });      
+//							java.awt.EventQueue.invokeLater(new Runnable() {
+//		                        @Override
+//		                        public void run() {
+//		                        	
+//		                        }
+//		                    });
+							
+						} else {
+
+						}
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
 				}
-				System.out.println("完成接收: ");
-				if (image!=null) {
-					showScreenShot(image);
-				}else{
-					
-				}
-				
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} 
+		}).start();
 	}
 
 	public static void main(String[] args) {
