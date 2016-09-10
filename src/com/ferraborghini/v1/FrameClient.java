@@ -56,7 +56,7 @@ public class FrameClient extends JFrame {
 	private int WIDTH = 0;
 	private JTextPane welcome = null;
 	private Dimension dimension = null;
-
+	JFrame jf = null;
 	public FrameClient() {
 		this.setTitle("Server");
 		dimension = Toolkit.getDefaultToolkit().getScreenSize();
