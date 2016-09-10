@@ -17,17 +17,17 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-public class FullScreenFrame extends JFrame implements KeyListener,AWTEventListener  {
+public class FullScreenFrame extends JFrame implements KeyListener {
 	private JLabel bgLb = new JLabel();
 	
 	
 	public FullScreenFrame() {
 		this.setTitle("屏幕捕获");
-		this.setUndecorated(false);
+		this.setUndecorated(true);
 		this.getContentPane().setLayout(new BorderLayout(1, 1));
 		this.setLocation(0, 0);
 		this.setVisible(true);
-		this.setFocusable(true);
+		this.requestFocus();
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent e) {
 				System.exit(0);
@@ -47,34 +47,16 @@ public class FullScreenFrame extends JFrame implements KeyListener,AWTEventListe
 	}
 
 	public void keyTyped(KeyEvent e) {
-		System.out.println(e.getModifiers()+""+KeyEvent.VK_ESCAPE);
-		if (e.getModifiers() == KeyEvent.VK_ESCAPE) {
-			
-			FullScreenFrame.this.setUndecorated(false);
-		}else if (e.getModifiers() == KeyEvent.VK_ENTER) {
-			FullScreenFrame.this.setUndecorated(true);
-		}
+		
 	}
 
 	public void keyPressed(KeyEvent e) {
-		System.out.println(e.getModifiers()+""+KeyEvent.VK_ESCAPE);
-		if (e.getModifiers() == KeyEvent.VK_ESCAPE) {
-			
-			FullScreenFrame.this.setUndecorated(false);
-		}else if (e.getModifiers() == KeyEvent.VK_ENTER) {
-			FullScreenFrame.this.setUndecorated(true);
-		}
+		
 	}
 
 	public void keyReleased(KeyEvent e) {
 		
 	}
 
-	public void eventDispatched(AWTEvent event) {
-		System.out.println(event.getID());
-		System.out.println(AWTEvent.KEY_EVENT_MASK);
-		if (AWTEvent.KEY_EVENT_MASK == event.getID()) {
-		
-		}
-	}
+	
 }

@@ -14,6 +14,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -50,7 +51,7 @@ import javax.swing.SwingUtilities;
 
 import com.sun.jdi.event.EventQueue;
 
-public class FrameClient extends JFrame {
+public class FrameClient extends JFrame{
 
 	/**
 	 * 
@@ -132,7 +133,30 @@ public class FrameClient extends JFrame {
 						imageSocketThread.stop();;
 					}
 				});
+				jf.addKeyListener(new KeyListener() {
+					
+					@Override
+					public void keyTyped(KeyEvent e) {
+						
+					}
+					
+					@Override
+					public void keyReleased(KeyEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void keyPressed(KeyEvent e) {
+						if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+							jf.setUndecorated(false);
+						}else if (e.getModifiers() == KeyEvent.VK_ENTER) {
+							jf.setUndecorated(true);
+						}
+					}
+				});
 			}
+			jf.requestFocus();
 			JLabel bgLb = new JLabel(new ImageIcon(screenshot));
 			jf.getContentPane().removeAll();
 			jf.getContentPane().add(bgLb, BorderLayout.CENTER);
@@ -293,5 +317,4 @@ public class FrameClient extends JFrame {
 		client.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		client.setVisible(true);
 	}
-
 }
