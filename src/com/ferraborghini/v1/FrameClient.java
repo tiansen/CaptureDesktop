@@ -149,7 +149,7 @@ public class FrameClient extends JFrame{
 					@Override
 					public void keyPressed(KeyEvent e) {
 						if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-							jf.setUndecorated(false);
+							jf.dispose();
 						}else if (e.getModifiers() == KeyEvent.VK_ENTER) {
 							jf.setUndecorated(true);
 						}
@@ -213,7 +213,7 @@ public class FrameClient extends JFrame{
 		int length = 0;
 		try {
 			
-			socket = new Socket("127.0.0.1", 9999);
+			socket = new Socket("192.168.0.103", 9999);
 			os = socket.getOutputStream();
 			is = socket.getInputStream();
 			byte[] data = new byte[1024];
@@ -268,7 +268,7 @@ public class FrameClient extends JFrame{
 					Socket socket = null;
 					InputStream is = null;
 					ObjectInputStream ois = null;
-					socket = new Socket("127.0.0.1", 9999);
+					socket = new Socket("192.168.0.103", 9999);
 					os = socket.getOutputStream();
 					is = socket.getInputStream();
 					System.out.println("开始接收数据...");
