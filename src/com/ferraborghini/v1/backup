@@ -65,3 +65,25 @@ http://www.itdadao.com/articles/c15a244675p0.html
 http://www.grpc.io/docs/quickstart/go.html#download-the-example
 http://www.grpc.io/docs/quickstart/go.html#try-it
 https://docs.docker.com/engine/installation/linux/centos/
+
+
+devstack安装
+以下操作使用root用户执行
+1）先下载创建用户的脚本，stack用户的home目录要在/opt/stack，
+git clone https://github.com/openstack-dev/devstack ~/devstack -b stable/mitaka
+2）安装依赖包redhat-lsb-core
+3）~/devstack/tools/create-stack-user.sh 
+4）rm -rf ~/devstack
+5）安装openvswitch
+yum -y install openssl-devel
+yum groupinstall "Development Tools"
+获得源码 wget http://openvswitch.org/releases/openvswitch-2.3.1.tar.gz
+解压 tar xfz openvswitch-2.3.1.tar.gz
+编译文件目录 mkdir -p ~/rpmbuild/SOURCES
+复制文件 cp openvswitch-2.3.1.tar.gz ~/rpmbuild/SOURCES
+从spec文件中删除openvswitch-kmod的依赖包，并创建一个新的spec文件（以下是一句）
+sed 's/openvswitch-kmod, //g' openvswitch-2.3.1/rhel/openvswitch.spec >openvswitch-2.3.1/rhel/openvswitch_no_kmod.spec
+开始编译：rpmbuild -bb --without=check ./openvswitch-2.3.1/rhel/openvswitch_no_kmod.spec
+安装编译生成的rpm文件：
+yum localinstall /root/rpmbuild/RPMS/x86_64/openvswitch-2.3.1-1.x86_64.rpm
+启动服务：systemctl start openvswitch.service
