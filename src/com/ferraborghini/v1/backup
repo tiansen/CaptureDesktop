@@ -7,6 +7,7 @@ http://www.aboutyun.com/forum.php?mod=viewthread&tid=9538&extra=page%3D1&page=1&
 http://docs.openstack.org/juno/install-guide/install/apt/content/neutron-compute-node.html
 http://docs.openstack.org/developer/devstack/guides/neutron.html
 http://tonybai.com/category/technical-notes/
+https://ask.openstack.org/en/question/87854/keystone-token-generation-fails-for-devstack/
 FrameServer
 //		JDialog jDialog = new JDialog();
 //		jDialog.setLocation((int) dimension.getWidth() / 4,
@@ -84,3 +85,86 @@ http://www.cnblogs.com/yetuweiba/p/4365488.html
 http://www.cnblogs.com/vovlie/p/4178077.html
 http://blog.csdn.net/tantexian/article/details/46707175
 http://www.jb51.net/article/56831.htm
+
+
+
+controller
+git clone https://github.com/openstack-dev/devstack ~/devstack -b stable/mitaka
+增加~/devstack/localrc文件，内容如下
+
+ADMIN_PASSWORD=admin
+DATABASE_PASSWORD=admin
+RABBIT_PASSWORD=admin
+SERVICE_PASSWORD=admin
+SERVICE_TOKEN=admin
+
+DATABASE_TYPE=mysql
+HOST_IP=10.21.50.236   设置的本机IP
+SERVICE_HOST=10.21.50.236
+MYSQL_HOST=10.21.50.236
+RABBIT_HOST=10.21.50.236
+GLANCE_HOSTPORT=10.21.50.236:9292
+KEYSTONE_HOST=10.21.50.236
+
+GIT_BASE=${GIT_BASE:-https://github.com}
+
+# Do not use Nova-Network
+disable_service n-net
+# Enable Neutron
+ENABLED_SERVICES+=,q-svc,q-dhcp,q-meta,q-agt,q-l3,q-lbaas,neutron,q-vpn,q-fwaas,cinder,c-vol
+
+## Neutron options
+Q_USE_SECGROUP=True
+FLOATING_RANGE="103.30.0.0/16"
+Q_FLOATING_ALLOCATION_POOL=start=103.30.0.200,end=103.30.0.220
+PUBLIC_NETWORK_GATEWAY="103.30.0.1"
+Q_L3_ENABLED=True
+PUBLIC_INTERFACE=p13p1
+Q_USE_PROVIDERNET_FOR_PUBLIC=True
+OVS_PHYSICAL_BRIDGE=br-ex
+PUBLIC_BRIDGE=br-ex
+OVS_BRIDGE_MAPPINGS=public:br-ex
+
+#enable heat 
+ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
+
+#Volume configuration
+VOLUME_BACKING_FILE_SIZE=20G
+
+
+
+
+
+compute 
+git clone https://github.com/openstack-dev/devstack ~/devstack -b stable/mitaka
+增加~/devstack/localrc文件，内容如下
+ADMIN_PASSWORD=admin
+DATABASE_PASSWORD=admin
+RABBIT_PASSWORD=admin
+SERVICE_PASSWORD=admin
+SERVICE_TOKEN=admin
+DATABASE_TYPE=mysql
+MULTI_HOST=1
+HOST_IP=103.30.0.106
+SERVICE_HOST=103.30.0.105
+
+MYSQL_HOST=103.30.0.105
+RABBIT_HOST=103.30.0.105
+GLANCE_HOSTPORT=103.30.0.105:9292
+KEYSTONE_HOST=103.30.0.105
+KEYSTONE_AUTH_HOST=103.30.0.105
+KEYSTONE_SERVICE_HOST=103.30.0.105
+
+GIT_BASE=${GIT_BASE:-https://github.com}
+
+ENABLED_SERVICES=rabbit,n-cpu,c-vol,q-agt
+
+# Do not use Nova-Network
+disable_service n-net
+
+PUBLIC_INTERFACE=p13p1
+
+NOVA_VNC_ENABLED=True
+NOVNCPROXY_URL="http://$SERVICE_HOST:6080/vnc_auto.html"
+VNCSERVER_LISTEN=$HOST_IP
+VNCSERVER_PROXYCLIENT_ADDRESS=$VNCSERVER_LISTEN
