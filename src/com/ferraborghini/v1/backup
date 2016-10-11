@@ -8,6 +8,7 @@ http://docs.openstack.org/juno/install-guide/install/apt/content/neutron-compute
 http://docs.openstack.org/developer/devstack/guides/neutron.html
 http://tonybai.com/category/technical-notes/
 https://ask.openstack.org/en/question/87854/keystone-token-generation-fails-for-devstack/
+http://fishcried.com/2015-07-23/openstack_disable_ipv6/
 FrameServer
 //		JDialog jDialog = new JDialog();
 //		jDialog.setLocation((int) dimension.getWidth() / 4,
