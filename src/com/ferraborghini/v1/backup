@@ -9,6 +9,10 @@ http://docs.openstack.org/developer/devstack/guides/neutron.html
 http://tonybai.com/category/technical-notes/
 https://ask.openstack.org/en/question/87854/keystone-token-generation-fails-for-devstack/
 http://fishcried.com/2015-07-23/openstack_disable_ipv6/
+http://docs.openstack.org/developer/kuryr-libnetwork/readme.html#getting-it-from-source
+
+
+
 FrameServer
 //		JDialog jDialog = new JDialog();
 //		jDialog.setLocation((int) dimension.getWidth() / 4,
