@@ -105,28 +105,4 @@ http://www.jb51.net/article/56831.htm
 
 
 
-try:
-        with ip.create(ifname=ifname, kind=KIND_VETH,
-                       reuse=True, peer=peer_name) as host_veth:
-            if not _is_up(host_veth):
-                host_veth.up()
-        with ip.interfaces[peer_name] as peer_veth:
-            fixed_ips = neutron_port.get(FIXED_IP_KEY, [])
-            if not fixed_ips and (IP_ADDRESS_KEY in neutron_port):
-                peer_veth.add_ip(neutron_port[IP_ADDRESS_KEY])
-            # 将container的veth配置IP
-            for fixed_ip in fixed_ips:
-                if IP_ADDRESS_KEY in fixed_ip and (SUBNET_ID_KEY in fixed_ip):
-                    subnet_id = fixed_ip[SUBNET_ID_KEY]
-                    subnet = subnets_dict[subnet_id]
-                    cidr = netaddr.IPNetwork(subnet['cidr'])
-                    peer_veth.add_ip(fixed_ip[IP_ADDRESS_KEY], cidr.prefixlen)
-            peer_veth.address = neutron_port[MAC_ADDRESS_KEY].lower()
-            if not _is_up(peer_veth):
-                peer_veth.up()
-    except pyroute2.CreateException:
-        raise exceptions.VethCreationFailure(
-            'Creating the veth pair was failed.')
-    except pyroute2.CommitException:
-        raise exceptions.VethCreationFailure(
-            'Could not configure the veth endpoint for the container.')
+
